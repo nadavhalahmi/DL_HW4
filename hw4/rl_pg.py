@@ -29,13 +29,18 @@ class PolicyNet(nn.Module):
 
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        #print(in_features)
+        layers = []
+        layers.append(nn.Linear(in_features, out_actions))
+        layers.append(nn.LogSoftmax())
+        self.our_net = nn.Sequential(*layers)
         # ========================
 
     def forward(self, x):
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        #print(x.shape)
+        action_scores = self.our_net(x.view(-1))
         # ========================
         return action_scores
 
@@ -50,7 +55,7 @@ class PolicyNet(nn.Module):
         """
         # TODO: Implement according to docstring.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        net = PolicyNet(in_features=env.observation_space.shape[0], out_actions=env.action_space.n,**kw)
         # ========================
         return net.to(device)
 
@@ -87,7 +92,7 @@ class PolicyAgent(object):
         #  Generate the distribution as described above.
         #  Notice that you should use p_net for *inference* only.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        actions_proba = torch.exp(self.p_net(self.curr_state))
         # ========================
 
         return actions_proba
@@ -108,9 +113,10 @@ class PolicyAgent(object):
         #  - Update agent state.
         #  - Generate and return a new experience.
         # ====== YOUR CODE: ======
-
-        raise NotImplementedError()
-
+        probs = self.current_action_distribution()
+        action = probs.argmax()
+        obs, reward, is_done, extra_info = self.env.step(action.item())
+        experience = Experience(obs, action.item(), reward, is_done)
         # ========================
         if is_done:
             self.reset()
