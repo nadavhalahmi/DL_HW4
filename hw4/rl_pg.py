@@ -143,7 +143,17 @@ class PolicyAgent(object):
             #  Create an agent and play the environment for one episode
             #  based on the policy encoded in p_net.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            # Reset the env to start a new episode
+            agent = cls(env, p_net, device)
+            agent.reset()
+            episode_done = False
+
+            while not episode_done:
+
+                obs, _, curr_reward, episode_done = agent.step()
+
+                reward += curr_reward
+                n_steps += 1
             # ========================
         return env, n_steps, reward
 
