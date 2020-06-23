@@ -39,7 +39,10 @@ class Episode(object):
         #  Try to implement it in O(n) runtime, where n is the number of
         #  states. Hint: change the order.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        qvals.append(0)
+        for exp in reversed(self.experiences):
+            qvals.append(gamma*qvals[-1] + exp.reward)
+        qvals = list(reversed(qvals[1:]))
         # ========================
         return qvals
 
@@ -83,7 +86,12 @@ class TrainBatch(object):
         #   - Calculate the q-values for states in each experience.
         #   - Construct a TrainBatch instance.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        for ep in episodes:
+            q_vals = torch.Tensor(ep.calc_qvals(gamma))
+            states = torch.Tensor([list(exp.state) for exp in ep.experiences])
+            actions = torch.Tensor([exp.action for exp in ep.experiences])
+            total_rewards = torch.Tensor([exp.reward for exp in ep.experiences])
+        train_batch = cls(states, actions, q_vals, total_rewards)
         # ========================
         return train_batch
 
@@ -141,6 +149,7 @@ class TrainBatchDataset(torch.utils.data.IterableDataset):
             #    by the agent.
             #  - Store Episodes in the curr_batch list.
             # ====== YOUR CODE: ======
+            episode_experiences = []
             episode_done = False
             reward = 0
             while not episode_done:
