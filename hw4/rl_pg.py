@@ -184,7 +184,9 @@ class VanillaPolicyGradientLoss(nn.Module):
         #  Return the policy weight term for the causal vanilla PG loss.
         #  This is a tensor of shape (N,).
         # ====== YOUR CODE: ======
-        policy_weight = batch.q_vals
+        gamma = (batch.q_vals[0]-batch.total_rewards[0])/batch.q_vals[1]
+        gammas = torch.Tensor([gamma**i for i in range(len(batch.q_vals))])
+        policy_weight = batch.q_vals*gammas
         # ========================
         return policy_weight
 
@@ -199,10 +201,13 @@ class VanillaPolicyGradientLoss(nn.Module):
         #   different episodes. So, here we'll simply average over the number
         #   of total experiences in our batch.
         # ====== YOUR CODE: ======
-        chosen_actions_scores = torch.Tensor([action_scores[i][int(batch.actions[i].item())] for i in range(len(batch.actions))])
-        log_proba = torch.log_softmax(chosen_actions_scores, dim=0)
-        weighted_average = policy_weight*log_proba
-        loss_p = -sum(weighted_average)/len(batch)
+        #chosen_actions_scores = torch.Tensor([action_scores[i][int(batch.actions[i].item())] for i in range(len(batch.actions))])
+        log_proba = torch.log_softmax(action_scores, dim=1)
+        chosen_actions_scores = log_proba.gather(dim=1, index=batch.actions.long().view(-1, 1)).view(-1)  # select performed action
+        weighted_average = 0
+        for i in range(len(chosen_actions_scores)):
+            weighted_average += policy_weight[i:].dot(chosen_actions_scores[i:])
+        loss_p = -weighted_average/len(batch)
         # ========================
         return loss_p
 
