@@ -29,7 +29,7 @@ class PolicyNet(nn.Module):
 
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        #print(in_features)
+        # print(in_features)
         layers = []
         layers.append(nn.Linear(in_features, out_actions))
         layers.append(nn.LogSoftmax())
@@ -39,7 +39,7 @@ class PolicyNet(nn.Module):
     def forward(self, x):
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
-        #print(x.shape)
+        # print(x.shape)
         action_scores = self.our_net(x.view(-1))
         # ========================
         return action_scores
@@ -55,7 +55,7 @@ class PolicyNet(nn.Module):
         """
         # TODO: Implement according to docstring.
         # ====== YOUR CODE: ======
-        net = PolicyNet(in_features=env.observation_space.shape[0], out_actions=env.action_space.n,**kw)
+        net = PolicyNet(in_features=env.observation_space.shape[0], out_actions=env.action_space.n, **kw)
         # ========================
         return net.to(device)
 
@@ -92,7 +92,9 @@ class PolicyAgent(object):
         #  Generate the distribution as described above.
         #  Notice that you should use p_net for *inference* only.
         # ====== YOUR CODE: ======
-        actions_proba = torch.exp(self.p_net(self.curr_state))
+        with torch.no_grad():  # Do a forward pass through the q_net to get q(s,a) for all a.
+            possible_actions = self.p_net(self.curr_state.unsqueeze(0))
+            actions_proba = torch.exp(possible_actions)
         # ========================
 
         return actions_proba
@@ -114,9 +116,10 @@ class PolicyAgent(object):
         #  - Generate and return a new experience.
         # ====== YOUR CODE: ======
         probs = self.current_action_distribution()
-        action = probs.argmax()
+        action = probs.multinomial(1)
         obs, reward, is_done, extra_info = self.env.step(action.item())
         experience = Experience(obs, action.item(), reward, is_done)
+        self.curr_state = torch.Tensor(obs)
         # ========================
         if is_done:
             self.reset()
@@ -149,7 +152,6 @@ class PolicyAgent(object):
             episode_done = False
 
             while not episode_done:
-
                 obs, _, curr_reward, episode_done = agent.step()
 
                 reward += curr_reward
@@ -184,9 +186,8 @@ class VanillaPolicyGradientLoss(nn.Module):
         #  Return the policy weight term for the causal vanilla PG loss.
         #  This is a tensor of shape (N,).
         # ====== YOUR CODE: ======
-        gamma = (batch.q_vals[0]-batch.total_rewards[0])/batch.q_vals[1]
-        gammas = torch.Tensor([gamma**i for i in range(len(batch.q_vals))])
-        policy_weight = batch.q_vals*gammas
+
+        policy_weight = batch.q_vals
         # ========================
         return policy_weight
 
@@ -201,13 +202,11 @@ class VanillaPolicyGradientLoss(nn.Module):
         #   different episodes. So, here we'll simply average over the number
         #   of total experiences in our batch.
         # ====== YOUR CODE: ======
-        #chosen_actions_scores = torch.Tensor([action_scores[i][int(batch.actions[i].item())] for i in range(len(batch.actions))])
+
         log_proba = torch.log_softmax(action_scores, dim=1)
         chosen_actions_scores = log_proba.gather(dim=1, index=batch.actions.long().view(-1, 1)).view(-1)  # select performed action
-        weighted_average = 0
-        for i in range(len(chosen_actions_scores)):
-            weighted_average += policy_weight[i:].dot(chosen_actions_scores[i:])
-        loss_p = -weighted_average/len(batch)
+        weighted_average = policy_weight.dot(chosen_actions_scores)
+        loss_p = -weighted_average / len(batch)
         # ========================
         return loss_p
 
