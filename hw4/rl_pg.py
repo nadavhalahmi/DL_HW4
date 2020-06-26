@@ -289,9 +289,9 @@ class ActionEntropyLoss(nn.Module):
         #   - Use pytorch built-in softmax and log_softmax.
         #   - Calculate loss per experience and average over all of them.
         # ====== YOUR CODE: ======
-        distribiutions = torch.softmax(action_scores, 0)
-        loss_e = sum(distribiutions * torch.log(distribiutions))
-        loss_e /= self.max_entropy
+        ps = torch.softmax(action_scores, 1)
+        log_ps = torch.log_softmax(action_scores, 1)
+        loss_e = (torch.sum(ps * log_ps, 1) / self.max_entropy).mean()
         # ========================
 
         loss_e *= self.beta
