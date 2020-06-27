@@ -435,7 +435,8 @@ class PolicyTrainer(object):
         losses = [loss_fn(batch, scores) for loss_fn in self.loss_functions]
         [losses_dict.update(loss[1]) for loss in losses]
         total_loss = sum(loss[0] for loss in losses)
-        [l[0].backward() for l in losses]
+#         [l[0].backward() for l in losses]
+        total_loss.backward()
         self.optimizer.step()
         # ========================
 
