@@ -430,7 +430,10 @@ class PolicyTrainer(object):
         #   - Backprop.
         #   - Update model parameters.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        scores = self.model(batch)
+        for loss_fn in self.loss_functions:
+            loss = loss_fn(batch, scores)
+            losses_dict["1"] = loss
         # ========================
 
         return total_loss, losses_dict
