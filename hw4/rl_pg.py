@@ -40,7 +40,7 @@ class PolicyNet(nn.Module):
         # TODO: Implement a simple neural net to approximate the policy.
         # ====== YOUR CODE: ======
         # print(x.shape)
-        action_scores = self.our_net(x.view(-1))
+        action_scores = self.our_net(x)
         # ========================
         return action_scores
 
@@ -97,7 +97,7 @@ class PolicyAgent(object):
             actions_proba = torch.exp(possible_actions)
         # ========================
 
-        return actions_proba
+        return actions_proba.view(-1)
 
     def step(self) -> Experience:
         """
@@ -430,10 +430,13 @@ class PolicyTrainer(object):
         #   - Backprop.
         #   - Update model parameters.
         # ====== YOUR CODE: ======
-        scores = self.model(batch)
-        for loss_fn in self.loss_functions:
-            loss = loss_fn(batch, scores)
-            losses_dict["1"] = loss
+        self.optimizer.zero_grad()
+        scores = self.model(batch.states)
+        losses = [loss_fn(batch, scores) for loss_fn in self.loss_functions]
+        [losses_dict.update(loss[1]) for loss in losses]
+        total_loss = sum(loss[0] for loss in losses)
+        [l[0].backward() for l in losses]
+        self.optimizer.step()
         # ========================
 
         return total_loss, losses_dict
