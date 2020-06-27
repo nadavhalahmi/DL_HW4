@@ -90,13 +90,13 @@ class TrainBatch(object):
         q_vals = torch.Tensor(ep.calc_qvals(gamma))
         states = torch.Tensor([list(exp.state) for exp in ep.experiences])
         actions = torch.Tensor([exp.action for exp in ep.experiences])
-        total_rewards = torch.Tensor([exp.reward for exp in ep.experiences]) #TODO: CHECK THIS. maybe take total_reward from ep
+        total_rewards = torch.Tensor([ep.total_reward]) #TODO: CHECK THIS. maybe take total_reward from ep
         for i in range(1,len(episodes)):
             ep = episodes[i]
             q_vals = torch.cat((q_vals, torch.Tensor(ep.calc_qvals(gamma))))
             states = torch.cat((states, torch.Tensor([list(exp.state) for exp in ep.experiences])))
             actions = torch.cat((actions, torch.Tensor([exp.action for exp in ep.experiences])))
-            total_rewards = torch.cat((total_rewards, torch.Tensor([exp.reward for exp in ep.experiences])))
+            total_rewards = torch.cat((total_rewards, torch.Tensor([ep.total_reward])))
         train_batch = cls(states, actions, q_vals, total_rewards)
         # ========================
         return train_batch
