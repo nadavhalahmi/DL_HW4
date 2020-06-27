@@ -14,7 +14,7 @@ def part1_pg_hyperparams():
     hp = dict(batch_size=32,
               gamma=0.99,
               beta=0.5,
-              learn_rate=1e-3,
+              learn_rate=0.0015,
               eps=1e-8,
               )
     # TODO: Tweak the hyperparameters if needed.

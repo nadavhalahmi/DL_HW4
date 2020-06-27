@@ -31,8 +31,12 @@ class PolicyNet(nn.Module):
         # ====== YOUR CODE: ======
         # print(in_features)
         layers = []
-        layers.append(nn.Linear(in_features, out_actions))
-        layers.append(nn.LogSoftmax())
+        layers.append(nn.Linear(in_features, 128))
+        layers.append(nn.ReLU())
+        layers.append(nn.Linear(128, 64))
+        layers.append(nn.ReLU())
+        layers.append(nn.Linear(64, out_actions))
+        #layers.append(nn.LogSoftmax())
         self.our_net = nn.Sequential(*layers)
         # ========================
 
@@ -94,7 +98,8 @@ class PolicyAgent(object):
         # ====== YOUR CODE: ======
         with torch.no_grad():  # Do a forward pass through the q_net to get q(s,a) for all a.
             possible_actions = self.p_net(self.curr_state.unsqueeze(0))
-            actions_proba = torch.exp(possible_actions)
+            #actions_proba = torch.exp(possible_actions)
+            actions_proba = torch.softmax(possible_actions, dim=1)
         # ========================
 
         return actions_proba.view(-1)
