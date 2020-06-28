@@ -19,14 +19,18 @@ class AACPolicyNet(nn.Module):
         #  Implement a dual-head neural net to approximate both the
         #  policy and value. You can have a common base part, or not.
         # ====== YOUR CODE: ======
-        layers = []
-        layers.append(nn.Linear(in_features, 128))
-        layers.append(nn.ReLU())
-        layers.append(nn.Linear(128, 64))
-        layers.append(nn.ReLU())
-        layers.append(nn.Linear(64, out_actions+1))
+        action_layers = []
+        action_layers.append(nn.Linear(in_features, 64))
+        action_layers.append(nn.ReLU())
+        action_layers.append(nn.Linear(64, out_actions))
         # layers.append(nn.LogSoftmax())
-        self.our_net = nn.Sequential(*layers)
+        self.action_net = nn.Sequential(*action_layers)
+        
+        state_value_layers = []
+        state_value_layers.append(nn.Linear(in_features, 64))
+        state_value_layers.append(nn.ReLU())
+        state_value_layers.append(nn.Linear(64, 1))
+        self.state_value_net = nn.Sequential(*state_value_layers)
         # ========================
 
     def forward(self, x):
@@ -41,9 +45,8 @@ class AACPolicyNet(nn.Module):
         #  calculate both the action scores (policy) and the value of the
         #  given state.
         # ====== YOUR CODE: ======
-        res = self.our_net(x)
-        action_scores = res.narrow(dim=1, start=0, length=4)
-        state_values = res.narrow(dim=1, start=4, length=1)
+        action_scores = self.action_net(x)
+        state_values = self.state_value_net(x)
         # ========================
 
         return action_scores, state_values
@@ -111,9 +114,8 @@ class AACPolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Notice that we don't want to backprop errors from the policy
         #  loss into the state-value network.
         # ====== YOUR CODE: ======
-        with torch.no_grad():
-            baseline = state_values
-            advantage = batch.q_vals-baseline
+        baseline = state_values.clone()
+        advantage = batch.q_vals-baseline
         # ========================
         return advantage
 
