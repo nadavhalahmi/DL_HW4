@@ -19,18 +19,20 @@ class AACPolicyNet(nn.Module):
         #  Implement a dual-head neural net to approximate both the
         #  policy and value. You can have a common base part, or not.
         # ====== YOUR CODE: ======
+        shared_layers = []
         action_layers = []
-        action_layers.append(nn.Linear(in_features, 64))
-        action_layers.append(nn.ReLU())
-        action_layers.append(nn.Linear(64, out_actions))
-        # layers.append(nn.LogSoftmax())
-        self.action_net = nn.Sequential(*action_layers)
+        state_layers = []
+        hidden_dim = kw['hidden_dim']
+        shared_layers.append(nn.Linear(in_features, hidden_dim))
+        shared_layers.append(nn.ReLU())
         
-        state_value_layers = []
-        state_value_layers.append(nn.Linear(in_features, 64))
-        state_value_layers.append(nn.ReLU())
-        state_value_layers.append(nn.Linear(64, 1))
-        self.state_value_net = nn.Sequential(*state_value_layers)
+        action_layers.append(nn.Linear(hidden_dim, out_actions))
+        
+        state_layers.append(nn.Linear(hidden_dim, 1))
+        
+        self.shared_net = nn.Sequential(*shared_layers)
+        self.action_net = nn.Sequential(*action_layers)
+        self.state_net = nn.Sequential(*state_layers)
         # ========================
 
     def forward(self, x):
@@ -45,8 +47,9 @@ class AACPolicyNet(nn.Module):
         #  calculate both the action scores (policy) and the value of the
         #  given state.
         # ====== YOUR CODE: ======
+        x = self.shared_net(x)
         action_scores = self.action_net(x)
-        state_values = self.state_value_net(x)
+        state_values = self.state_net(x)
         # ========================
 
         return action_scores, state_values
@@ -114,7 +117,7 @@ class AACPolicyGradientLoss(VanillaPolicyGradientLoss):
         #  Notice that we don't want to backprop errors from the policy
         #  loss into the state-value network.
         # ====== YOUR CODE: ======
-        baseline = state_values.clone()
+        baseline = state_values.detach()
         advantage = batch.q_vals-baseline
         # ========================
         return advantage
