@@ -36,8 +36,12 @@ def part1_aac_hyperparams():
     # TODO: Tweak the hyperparameters. You can also add new ones if you need
     #   them for your model implementation.
     # ====== YOUR CODE: ======
-    hp['hidden_dim'] = 64
-    hp['learn_rate'] = 0.001
+    hp['batch_size'] = 16
+    hp['learn_rate'] = 0.0023
+    hp['hidden_dim'] = 128
+    hp['gamma'] = 0.9
+    hp['beta'] = 0.9
+    hp['delta'] = 0.004
     # ========================
     return hp
 
