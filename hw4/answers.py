@@ -39,7 +39,7 @@ def part1_aac_hyperparams():
     hp['batch_size'] = 16
     hp['learn_rate'] = 0.0023
     hp['hidden_dim'] = 128
-    hp['gamma'] = 0.9
+    hp['gamma'] = 0.945
     hp['beta'] = 0.9
     hp['delta'] = 0.004
     # ========================
